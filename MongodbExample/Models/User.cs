@@ -18,5 +18,12 @@ namespace Models
 
         [BsonElement("password")]
         public string Password {get; set;}
-        }
+
+
+
+        #region posts
+        [BsonElement("posts")]
+        public int Posts { get; set;}
+        #endregion
+    }
 }

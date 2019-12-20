@@ -1,7 +1,9 @@
 using MongoDB.Driver;
+using MongoDB.Bson;
 using Models;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace MongoDAL 
 {
@@ -38,5 +40,34 @@ namespace MongoDAL
         public void Delete(User ToDelete) => users.DeleteOne(user => user.Id == ToDelete.Id);
 
         #endregion create,read,delete
+
+
+        #region simple_agg
+            public List<string> GetDistinctPasswordHashes() => users.Distinct<string>("password","{}").ToList();
+        #endregion 
+
+        #region  aggs
+            public List<User> CommentsByUser()
+            {
+                var pipeline = new List<BsonDocument>
+                {
+                    new BsonDocument("$lookup", 
+                        new BsonDocument
+                            {
+                                { "from", "comments" }, 
+                                { "localField", "email" }, 
+                                { "foreignField", "email" }, 
+                                { "as", "comments" }
+                            }),
+                    new BsonDocument("$addFields", 
+                        new BsonDocument("posts", 
+                            new BsonDocument("$size", "$comments"))),
+                        new BsonDocument("$project", 
+                            new BsonDocument("comments", 0))
+                };
+                
+                return users.Aggregate<User>(pipeline).ToList();
+            }
+        #endregion
     }
 }
